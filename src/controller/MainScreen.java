@@ -1,34 +1,71 @@
 package controller;
 
+
 import java.util.Random;
 
+import Iedk.Edk;
+import Iedk.EdkErrorCode;
+import com.sun.jna.Pointer;
+import com.sun.jna.ptr.DoubleByReference;
+import com.sun.jna.ptr.IntByReference;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.collections.FXCollections;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
+import javafx.concurrent.WorkerStateEvent;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
+import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.layout.GridPane;
 import javafx.util.Duration;
+
+
 
 public class MainScreen extends Main {
 	
 	private Main main;
-	
-	int group[] = new int[10];
+
+	public static DoubleByReference alpha     = new DoubleByReference(0);
+	public static DoubleByReference low_beta  = new DoubleByReference(0);
+	public static DoubleByReference high_beta = new DoubleByReference(0);
+	public static DoubleByReference gamma     = new DoubleByReference(0);
+	public static DoubleByReference theta     = new DoubleByReference(0);
+
+	private double totalAlpha, totalLowBeta, totalHighBeta, totalGamma, totalTheta;
+
+	private Service<Void> backgorundThread;
+	private boolean killEpocThread = false;
+
 	final CategoryAxis xAxis1 = new CategoryAxis();
     final NumberAxis yAxis1 = new NumberAxis();
+
+	final CategoryAxis xAxis2 = new CategoryAxis();
+	final NumberAxis yAxis2 = new NumberAxis();
 	
 	@FXML
-	private BarChart barChartMain11;
+	private BarChart <String, Number> barChartConcentration = new BarChart<>(xAxis2, yAxis2);
 	
+	@FXML BarChart<String, Number> barChartWaveData = new BarChart<>(xAxis1, yAxis1);
+
 	@FXML
-	private BarChart<String, Number> barChartMain10 = new BarChart<>(xAxis1, yAxis1);
+	private Button buttonMainStart;
+
+	@FXML
+	private Button buttonMainFinish;
 	
 	@FXML
 	private GridPane gridMainScreen;
+
+	@FXML
+	private ChoiceBox  choiceBoxDataChannel;
+
 	
 	
     final BarChart<String, Number> barChart1 = new BarChart<>(xAxis1, yAxis1);
@@ -40,113 +77,234 @@ public class MainScreen extends Main {
 	
 	@FXML
     public void initialize() {
-		
-		System.out.println("Uslo je");
-		
-		 XYChart.Series series1 = new XYChart.Series();
-	        series1.getData().add(new XYChart.Data("0-10", group[0]));
-	        series1.getData().add(new XYChart.Data("10-20", group[1]));
-	        series1.getData().add(new XYChart.Data("20-30", group[2]));
-	        series1.getData().add(new XYChart.Data("30-40", group[3]));
-	        series1.getData().add(new XYChart.Data("40-50", group[4]));
-	        series1.getData().add(new XYChart.Data("50-60", group[5]));
-	        series1.getData().add(new XYChart.Data("60-70", group[6]));
-	        series1.getData().add(new XYChart.Data("70-80", group[7]));
-	        series1.getData().add(new XYChart.Data("80-90", group[8]));
-	        series1.getData().add(new XYChart.Data("90-100", group[9]));
 
-	        barChartMain10.getData().addAll(series1);
-	        //Label labelAnimated1 = new Label();
-	        barChartMain10.setAnimated(false);
-	        //vBoxBarChart1.getChildren().addAll(barChart1, labelAnimated1);
-	        //- End of barChart1
-	 
-	        //PieChart2 with setAnimated(false)
-	        //VBox vBoxPieChart2 = new VBox();
-	 
-	 
-	        Random random = new Random();
-	 
-	        //Apply Animating Data in Charts
-	        //ref: http://docs.oracle.com/javafx/2/charts/bar-chart.htm
-	        //"Animating Data in Charts" section
-	        Timeline timeline = new Timeline();
-	        timeline.getKeyFrames().add(
-	                new KeyFrame(Duration.millis(200), (ActionEvent actionEvent) -> {
-	 
-	                    int data = random.nextInt(100);
-	                    /*
-	                    final int mean = 50;
-	                    final int standardDeviation = 10;
-	                    int data = mean + (int) (random.nextGaussian() * standardDeviation);
-	                    */
-	 
-	                    if (data <= 10) {
-	                        group[0]++;
-	                        series1.getData().set(0, new XYChart.Data("0-10", group[0]));
+		initalizeChoiceBox();
 
-	                    } else if (data <= 20) {
-	                        group[1]++;
-	                        series1.getData().set(1, new XYChart.Data("10-20", group[1]));
+		buttonMainStart.setOnAction(e -> {
+			killEpocThread = false;
+			//https://www.youtube.com/watch?v=wOtGPJBUAVs
+			backgorundThread = new Service<Void>() {
 
-	                    } else if (data <= 30) {
-	                        group[2]++;
-	                        series1.getData().set(2, new XYChart.Data("20-30", group[2]));
-;
-	                    } else if (data <= 40) {
-	                        group[3]++;
-	                        series1.getData().set(3, new XYChart.Data("30-40", group[3]));
-	              
-	                    } else if (data <= 50) {
-	                        group[4]++;
-	                        series1.getData().set(4, new XYChart.Data("40-50", group[4]));
-	          
-	                    } else if (data <= 60) {
-	                        group[5]++;
-	                        series1.getData().set(5, new XYChart.Data("50-60", group[5]));
-	              
-	                    } else if (data <= 70) {
-	                        group[6]++;
-	                        series1.getData().set(6, new XYChart.Data("60-70", group[6]));
-	             
-	                    } else if (data <= 80) {
-	                        group[7]++;
-	                        series1.getData().set(7, new XYChart.Data("70-80", group[7]));
-	           
-	                    } else if (data <= 90) {
-	                        group[8]++;
-	                        series1.getData().set(8, new XYChart.Data("80-90", group[8]));
-	        
-	                    } else if (data <= 100) {
-	                        group[9]++;
-	                        series1.getData().set(9, new XYChart.Data("10-100", group[9]));
 
-	                    }
-	 
-	                    /*labelAnimated1.setText(
-	                            "barChart1.getAnimated() = " + barChart1.getAnimated());*/
+				@Override
+				protected Task<Void> createTask() {
+					return new Task<Void>() {
+						@Override
+						protected Void call() throws Exception {
 
-	 
-	                    String s = "";
-	                    for (int i = 0; i < 10; i++) {
-	                        s += " " + group[i];
-	                    }
-	                   // labelCnt.setText(s);
-	                }));
-	 
-	        timeline.setCycleCount(1000);
-	        timeline.setAutoReverse(true);  //!?
-	        timeline.play();
+							epocData(isCancelled());
+							System.out.println("Zavrsilo je.");
+							return null;
+						}
+					};
+				}
+			};
+
+			backgorundThread.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
+				@Override
+				public void handle(WorkerStateEvent event) {
+					System.out.println("Zavrsilo je.");
+				}
+			});
+
+			//barChartMain10.barGapProperty().bind(backgorundThread.);
+
+			backgorundThread.restart();
+		});
+
+		buttonMainFinish.setOnAction(e -> {
+			killEpocThread = true;
+		});
+
+		initializeBarChartWaveData();
+
+		initializeBarChartConcentrationData();
+
 	 
 	    }
-	 
-	 
-	    //generate dummy random data
-	    private void prepareData() {
-	        for (int i = 0; i < 10; i++) {
-	            group[i] = 0;
-	        }
-	    }
+
+
+	public void initalizeChoiceBox(){
+		choiceBoxDataChannel.setItems(FXCollections.observableArrayList(
+						"AF3", "F7", "F3", "FC5", "T7", "P7", "Pz", "O1", "O2", "P8", "T8", "FC6", "F4", "F8", "AF4", "Total")
+		);
+
+		choiceBoxDataChannel.getSelectionModel().selectFirst();
+	}
+
+	public void initializeBarChartConcentrationData(){
+		XYChart.Series series1 = new XYChart.Series();
+		series1.getData().add(new XYChart.Data("Concentration", 0));
+
+
+
+		barChartConcentration.getData().addAll(series1);
+		//Label labelAnimated1 = new Label();
+		barChartConcentration.setAnimated(false);
+
+		Timeline timeline = new Timeline();
+		timeline.getKeyFrames().add(
+				new KeyFrame(Duration.millis(500), (ActionEvent actionEvent) -> {
+
+					if (choiceBoxDataChannel.getValue().toString().equals("Total")){
+						series1.getData().set(0, new XYChart.Data("Concentration", totalTheta/totalLowBeta));
+
+					}
+					else{
+						series1.getData().set(0, new XYChart.Data("Concentration", theta.getValue()/low_beta.getValue()));
+					}
+				}));
+
+		timeline.setCycleCount(1000);
+		timeline.setAutoReverse(true);  //!?
+		timeline.play();
+	}
+
+	public void initializeBarChartWaveData(){
+		XYChart.Series series1 = new XYChart.Series();
+		series1.getData().add(new XYChart.Data("theta", 0));
+		series1.getData().add(new XYChart.Data("alpha", 0));
+		series1.getData().add(new XYChart.Data("low_beta", 0));
+		series1.getData().add(new XYChart.Data("high_beta",0));
+		series1.getData().add(new XYChart.Data("gamma", 0));
+
+
+		barChartWaveData.getData().addAll(series1);
+		//Label labelAnimated1 = new Label();
+		barChartWaveData.setAnimated(false);
+
+		Timeline timeline = new Timeline();
+		timeline.getKeyFrames().add(
+				new KeyFrame(Duration.millis(500), (ActionEvent actionEvent) -> {
+
+					if (choiceBoxDataChannel.getValue().toString().equals("Total")){
+						series1.getData().set(0, new XYChart.Data("theta", totalTheta));
+						series1.getData().set(1, new XYChart.Data("alpha",totalAlpha ));
+						series1.getData().set(2, new XYChart.Data("low_beta", totalLowBeta));
+						series1.getData().set(3, new XYChart.Data("high_beta", totalHighBeta));
+						series1.getData().set(4, new XYChart.Data("gamma", totalGamma));
+					}
+					else{
+						series1.getData().set(0, new XYChart.Data("theta", theta.getValue()));
+						series1.getData().set(1, new XYChart.Data("alpha", alpha.getValue()));
+						series1.getData().set(2, new XYChart.Data("low_beta", low_beta.getValue()));
+						series1.getData().set(3, new XYChart.Data("high_beta", high_beta.getValue()));
+						series1.getData().set(4, new XYChart.Data("gamma", gamma.getValue()));
+					}
+
+
+				}));
+
+		timeline.setCycleCount(1000);
+		timeline.setAutoReverse(true);  //!?
+		timeline.play();
+	}
+
+	public void epocData(boolean cancel) {
+		Pointer eEvent = Edk.INSTANCE.IEE_EmoEngineEventCreate();
+		Pointer eState = Edk.INSTANCE.IEE_EmoStateCreate();
+
+		IntByReference userID = null;
+		boolean ready = false;
+		int state = 0;
+
+		Edk.IEE_DataChannels_t dataChannel;
+
+		userID = new IntByReference(0);
+
+		if (Edk.INSTANCE.IEE_EngineConnect("Emotiv Systems-5") != EdkErrorCode.EDK_OK
+				.ToInt()) {
+			System.out.println("Emotiv Engine start up failed.");
+			return;
+		}
+
+		System.out.println("Start receiving Data!");
+		System.out.println("Theta, Alpha, Low_beta, High_beta, Gamma");
+
+		while (true) {
+			if (killEpocThread) {
+				break;
+			}
+
+			state = Edk.INSTANCE.IEE_EngineGetNextEvent(eEvent);
+
+			// New event needs to be handled
+			if (state == EdkErrorCode.EDK_OK.ToInt()) {
+				int eventType = Edk.INSTANCE.IEE_EmoEngineEventGetType(eEvent);
+				Edk.INSTANCE.IEE_EmoEngineEventGetUserId(eEvent, userID);
+
+				// Log the EmoState if it has been updated
+				if (eventType == Edk.IEE_Event_t.IEE_UserAdded.ToInt())
+					if (userID != null) {
+						System.out.println("User added");
+						ready = true;
+					}
+			} else if (state != EdkErrorCode.EDK_NO_EVENT.ToInt()) {
+				System.out.println("Internal error in Emotiv Engine!");
+				break;
+			}
+
+			if (ready) {
+
+				int i = 0;
+				String choice = choiceBoxDataChannel.getValue().toString();
+
+				// 01 = Pz
+				switch (choice) {
+					case "AF3" :  i = 3; break;
+					case "F7" :  i = 4; break;
+					case "F3" :  i = 5; break;
+					case "FC5" :  i = 6; break;
+					case "T7" :  i = 7; break;
+					case "P7" :  i = 8; break;
+					case "Pz" :  i = 9; break;
+					case "O1" :  i = 9; break;
+					case "O2" :  i = 10; break;
+					case "P8" :  i = 11; break;
+					case "T8" :  i = 12; break;
+					case "FC6" :  i = 13; break;
+					case "F4" :  i = 14; break;
+					case "F8" :  i = 15; break;
+					case "AF4" :  i = 16; break;
+					case "Total" :  i = 0; break;
+					default: break;
+				}
+
+				if (i != 0){
+					totalAlpha = totalLowBeta = totalHighBeta = totalGamma = totalTheta = 0;
+					for(int j = 3 ; j < 17 ; j++)
+					{
+						int result = Edk.INSTANCE.IEE_GetAverageBandPowers(userID.getValue(), j, theta, alpha, low_beta, high_beta, gamma);
+						if(result == EdkErrorCode.EDK_OK.ToInt()){
+							totalAlpha += alpha.getValue();
+							totalLowBeta += low_beta.getValue();
+							totalHighBeta += high_beta.getValue();
+							totalGamma += gamma.getValue();
+							totalTheta += theta.getValue();
+						}
+					}
+					totalAlpha /= 16;
+					totalLowBeta /= 16;
+					totalHighBeta /= 16;
+					totalGamma /= 16;
+					totalTheta /= 16;
+				}
+				else {
+					int result = Edk.INSTANCE.IEE_GetAverageBandPowers(userID.getValue(), i, theta, alpha, low_beta, high_beta, gamma);
+					if(result == EdkErrorCode.EDK_OK.ToInt()){
+						//If data is returned
+					}
+				}
+
+
+			}
+		}
+
+		Edk.INSTANCE.IEE_EngineDisconnect();
+		Edk.INSTANCE.IEE_EmoStateFree(eState);
+		Edk.INSTANCE.IEE_EmoEngineEventFree(eEvent);
+		System.out.println("Disconnected!");
+	}
 	
 
 }
