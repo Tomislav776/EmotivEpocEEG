@@ -51,7 +51,7 @@ import javax.imageio.ImageIO;
 
 
 public class MainScreen extends Main {
-	
+
 	private Main mainApp;
 	private UserScreen childUserScreen;
 
@@ -70,7 +70,7 @@ public class MainScreen extends Main {
 	public static boolean startButton = false;
 
 	final CategoryAxis xAxis1 = new CategoryAxis();
-    final NumberAxis yAxis1 = new NumberAxis();
+	final NumberAxis yAxis1 = new NumberAxis();
 
 	final CategoryAxis xAxis2 = new CategoryAxis();
 	final NumberAxis yAxis2 = new NumberAxis();
@@ -80,10 +80,10 @@ public class MainScreen extends Main {
 
 	public double threshold, barChartValue, baseline = 0, divider = 1, timePlaying = 0;
 
-	
+
 	@FXML
 	public BarChart <String, Number> barChartConcentration = new BarChart<>(xAxis2, yAxis2);
-	
+
 	@FXML
 	public BarChart<String, Number> barChartWaveData = new BarChart<>(xAxis1, yAxis1);
 
@@ -123,11 +123,11 @@ public class MainScreen extends Main {
 
 	public XYChart.Series series = new XYChart.Series();
 
-	
+
 	public void setMainAppMain(Main mainApp) {
-        this.mainApp = mainApp;
+		this.mainApp = mainApp;
 		mainApp.setSubScreen(this);
-    }
+	}
 
 	public void setSubScreen(UserScreen sub) {
 		this.childUserScreen = sub;
@@ -136,9 +136,9 @@ public class MainScreen extends Main {
 	public void setMainApp(MainScreen mainApp) {
 		this.mainApp = mainApp;
 	}
-	
+
 	@FXML
-    public void initialize() {
+	public void initialize() {
 
 		buttonMainFinish.setDisable(true);
 
@@ -197,8 +197,7 @@ public class MainScreen extends Main {
 						@Override
 						protected Void call() throws Exception {
 
-							//epocData(isCancelled());
-							emotivData.testData();  //Starts a stream of data
+							emotivData.epocData(choiceBoxDataChannel.getValue().toString());  //Starts a stream of data
 							return null;
 						}
 					};
@@ -249,7 +248,7 @@ public class MainScreen extends Main {
 			}
 		});
 
-	    }
+	}
 
 	public void resetLineChart(){
 		series.getData().clear();
@@ -272,7 +271,7 @@ public class MainScreen extends Main {
 		{
 			case "Alpha/Theta":
 				if (choiceBoxDifficulty.getValue().toString().equals("Easy"))
-				threshold = baseline * 1.1;
+					threshold = baseline * 1.1;
 				else if (choiceBoxDifficulty.getValue().toString().equals("Medium"))
 					threshold = baseline * 1.2;
 				else
@@ -382,25 +381,25 @@ public class MainScreen extends Main {
 	}
 
 	public  void createUsersDirectory() {
-	String path = System.getProperty("user.dir") + File.separator;
+		String path = System.getProperty("user.dir") + File.separator;
 
 		File fileUsersTxt = new File(path+"Users.txt");
-	if (!fileUsersTxt.exists()) {
-		try {
-			BufferedWriter bw = new BufferedWriter(new PrintWriter(path + "Users.txt"));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		if (!fileUsersTxt.exists()) {
+			try {
+				BufferedWriter bw = new BufferedWriter(new PrintWriter(path + "Users.txt"));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 
-		File file = new File(path + "Documents");
-		if (!file.exists()) {
-			if (file.mkdir()) {
-				System.out.println("Directory is created!");
-			} else {
-				System.out.println("Failed to create directory!");
+			File file = new File(path + "Documents");
+			if (!file.exists()) {
+				if (file.mkdir()) {
+					System.out.println("Directory is created!");
+				} else {
+					System.out.println("Failed to create directory!");
+				}
 			}
 		}
-	}
 
 		path = System.getProperty("user.dir") + File.separator + "Documents" + File.separator;
 
@@ -635,16 +634,16 @@ public class MainScreen extends Main {
 				new KeyFrame(Duration.millis(500), (ActionEvent actionEvent) -> {
 					double value = getMeasuringBarValue();
 
-						data.setYValue(value);
-						series1.getData().set(0, data);
+					data.setYValue(value);
+					series1.getData().set(0, data);
 
-						if (startButton) {
-							series.getData().add(new XYChart.Data(++xSeriesData, value));
-						}
+					if (startButton) {
+						series.getData().add(new XYChart.Data(++xSeriesData, value));
+					}
 
-						if (buttonOpenUserWindow.isDisabled()) {
-							childUserScreen.data.setYValue(value);
-						}
+					if (buttonOpenUserWindow.isDisabled()) {
+						childUserScreen.data.setYValue(value);
+					}
 
 					if (choiceBoxStimulation.getValue().toString().equals("Music") && baseline != 0 && !choiceBoxTraining.getValue().toString().equals("Baseline") && threshold != 0 && buttonOpenUserWindow.isDisabled() && buttonMainStart.isDisabled()){
 						if (choiceBoxTraining.getValue().toString().equals("Alpha/Theta") && value < threshold){
@@ -697,23 +696,23 @@ public class MainScreen extends Main {
 		double theta, lowBeta, value;
 
 		if (buttonChooseSong.isDisabled())
-		switch(choiceBoxTraining.getValue().toString())
-		{
-			case "Baseline":
-				baseline += getMeasuringValue();
-				divider++;
-				break;
-			case "Alpha/Theta":
-				getMeasuringValue();
-				break;
-			case "Theta/LowBeta":
-				getMeasuringValue();
-				break;
-			default:
-				//Here is different formula
-				getMeasuringValue();
-				break;
-		}
+			switch(choiceBoxTraining.getValue().toString())
+			{
+				case "Baseline":
+					baseline += getMeasuringValue();
+					divider++;
+					break;
+				case "Alpha/Theta":
+					getMeasuringValue();
+					break;
+				case "Theta/LowBeta":
+					getMeasuringValue();
+					break;
+				default:
+					//Here is different formula
+					getMeasuringValue();
+					break;
+			}
 
 
 		value = getMeasuringValue();
@@ -793,7 +792,7 @@ public class MainScreen extends Main {
 
 			// Load root layout from fxml file.
 			FXMLLoader loader = new FXMLLoader();
-			loader.setLocation(Main.class.getResource("../view/UserDisplay.fxml"));
+			loader.setLocation(getClass().getClassLoader().getResource("view/UserDisplay.fxml"));
 			AnchorPane anchor = (AnchorPane) loader.load();
 
 			Stage window = new Stage();

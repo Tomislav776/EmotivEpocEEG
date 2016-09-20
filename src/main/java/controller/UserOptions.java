@@ -101,52 +101,52 @@ public class UserOptions {
 
     public void saveUserInfo(){
 
-            try (BufferedWriter bw = new BufferedWriter(new PrintWriter(userPath + "UserInfo.txt"))) {
+        try (BufferedWriter bw = new BufferedWriter(new PrintWriter(userPath + "UserInfo.txt"))) {
 
-                bw.write("First Name");
-                bw.newLine();
-                bw.write(textFieldFirstName.getText());
-                bw.newLine();
+            bw.write("First Name");
+            bw.newLine();
+            bw.write(textFieldFirstName.getText());
+            bw.newLine();
 
-                bw.write("Last Name");
-                bw.newLine();
-                bw.write(textFieldLastName.getText());
-                bw.newLine();
+            bw.write("Last Name");
+            bw.newLine();
+            bw.write(textFieldLastName.getText());
+            bw.newLine();
 
-                bw.write("Date of Birth");
-                bw.newLine();
-                bw.write(textFieldDateOfBirth.getText());
-                bw.newLine();
+            bw.write("Date of Birth");
+            bw.newLine();
+            bw.write(textFieldDateOfBirth.getText());
+            bw.newLine();
 
-                bw.write("Address");
-                bw.newLine();
-                bw.write(textFieldAddress.getText());
-                bw.newLine();
+            bw.write("Address");
+            bw.newLine();
+            bw.write(textFieldAddress.getText());
+            bw.newLine();
 
-                bw.write("Phone Number");
-                bw.newLine();
-                bw.write(textFieldPhoneNumber.getText());
-                bw.newLine();
+            bw.write("Phone Number");
+            bw.newLine();
+            bw.write(textFieldPhoneNumber.getText());
+            bw.newLine();
 
-                bw.newLine();bw.newLine();
-                bw.write("Data");
-                bw.newLine();
+            bw.newLine();bw.newLine();
+            bw.write("Data");
+            bw.newLine();
 
 
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 
     private void addUserToTheList(){
-            try (BufferedWriter output = new BufferedWriter(new FileWriter("Users.txt", true))) {
-                output.write(textFieldFirstName.getText() + " " + textFieldLastName.getText());
-                output.newLine();
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
+        try (BufferedWriter output = new BufferedWriter(new FileWriter("Users.txt", true))) {
+            output.write(textFieldFirstName.getText() + " " + textFieldLastName.getText());
+            output.newLine();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 

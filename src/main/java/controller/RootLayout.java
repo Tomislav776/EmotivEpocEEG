@@ -46,7 +46,7 @@ public class RootLayout{
         try {
             // Load root layout from fxml file.
             FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(Main.class.getResource("../view/UserOptions.fxml"));
+            loader.setLocation(getClass().getClassLoader().getResource("view/UserOptions.fxml"));
             AnchorPane anchor = (AnchorPane) loader.load();
 
             Stage window = new Stage();
@@ -69,12 +69,12 @@ public class RootLayout{
         try {
             // Load root layout from fxml file.
             FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(Main.class.getResource("../view/SaveUserData.fxml"));
+            loader.setLocation(getClass().getClassLoader().getResource("view/SaveUserData.fxml"));
             AnchorPane anchor = (AnchorPane) loader.load();
 
             Stage window = new Stage();
             window.initModality(Modality.APPLICATION_MODAL);
-            window.setTitle("User Options");
+            window.setTitle("Save data");
 
             SaveUserData controller = loader.getController();
             controller.setMainApp(this);
