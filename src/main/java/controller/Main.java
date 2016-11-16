@@ -1,15 +1,19 @@
 package controller;
 
 
+import java.io.File;
 import java.io.IOException;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.image.Image;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+
+import javax.swing.text.html.ImageView;
 
 
 public class Main extends Application {
@@ -24,6 +28,9 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+
+        System.load(System.getProperty("user.dir") + File.separator + "bin" + File.separator + "win64" + File.separator + "edk.dll");
+        System.load(System.getProperty("user.dir") + File.separator + "bin" + File.separator + "win64" + File.separator + "glut64.dll");
 
         this.primaryStage = primaryStage;
         this.primaryStage.setTitle("Emotiv EEG");
@@ -41,6 +48,10 @@ public class Main extends Application {
             loader.setLocation(getClass().getClassLoader().getResource("view/RootLayout.fxml"));
             rootLayout = (BorderPane) loader.load();
 
+            String path = System.getProperty("user.dir") + File.separator + "IndicatorPhotos" + File.separator + "Emotiv Epoc EEG.png";
+            File img = new File(path);
+
+            primaryStage.getIcons().add(new Image(img.toURI().toString()));
 
             Scene scene = new Scene(rootLayout);
             primaryStage.setScene(scene);

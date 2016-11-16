@@ -20,7 +20,7 @@
 <?import javafx.scene.shape.Circle?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="800.0" prefWidth="1400.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.MainScreen">
+<AnchorPane minHeight="700.0" minWidth="1200.0" prefHeight="700.0" prefWidth="1200.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.MainScreen">
    <children>
       <GridPane fx:id="gridMainScreen" alignment="CENTER" layoutX="224.0" layoutY="105.0" prefHeight="300.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <columnConstraints>
@@ -38,7 +38,7 @@
                 <CategoryAxis side="BOTTOM" />
               </xAxis>
               <yAxis>
-                <NumberAxis animated="false" autoRanging="false" minorTickLength="2.0" side="LEFT" tickUnit="2.0" upperBound="20.0" />
+                <NumberAxis animated="false" autoRanging="false" minorTickLength="2.0" side="LEFT" tickUnit="1.0" upperBound="10.0" />
               </yAxis>
             </BarChart>
             <VBox alignment="BOTTOM_CENTER" GridPane.columnIndex="1" GridPane.rowIndex="2">
@@ -98,14 +98,18 @@
                   <Insets />
                </GridPane.margin>
                <children>
-                  <BarChart fx:id="barChartConcentration" legendVisible="false" maxWidth="40.0" prefHeight="132.0" prefWidth="200.0">
-                    <xAxis>
-                      <CategoryAxis side="BOTTOM" />
-                    </xAxis>
-                    <yAxis>
-                      <NumberAxis autoRanging="false" minorTickLength="1.0" side="LEFT" tickUnit="1.0" upperBound="10.0" />
-                    </yAxis>
-                  </BarChart>
+                  <VBox>
+                     <children>
+                        <BarChart fx:id="barChartConcentration" legendVisible="false" maxWidth="200.0" prefHeight="359.0" prefWidth="200.0">
+                          <xAxis>
+                            <CategoryAxis side="BOTTOM" />
+                          </xAxis>
+                          <yAxis>
+                            <NumberAxis autoRanging="false" minorTickLength="1.0" side="LEFT" tickUnit="1.0" upperBound="10.0" />
+                          </yAxis>
+                        </BarChart>
+                     </children>
+                  </VBox>
                   <VBox alignment="CENTER">
                      <children>
                         <Label text="Threshold">
@@ -183,7 +187,7 @@
                         </ImageView>
                      </children>
                      <HBox.margin>
-                        <Insets left="10.0" right="110.0" />
+                        <Insets left="10.0" right="40.0" />
                      </HBox.margin>
                   </VBox>
                   <Group>
@@ -302,7 +306,7 @@
                         <ChoiceBox fx:id="choiceBoxDataChannel" prefWidth="150.0" />
                      </children>
                      <padding>
-                        <Insets left="60.0" />
+                        <Insets left="40.0" />
                      </padding>
                   </VBox>
                   <VBox alignment="BOTTOM_CENTER">
@@ -315,7 +319,7 @@
                         <ChoiceBox fx:id="choiceBoxTraining" prefWidth="150.0" />
                      </children>
                      <padding>
-                        <Insets left="60.0" />
+                        <Insets left="40.0" />
                      </padding>
                   </VBox>
                </children>

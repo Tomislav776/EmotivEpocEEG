@@ -6,11 +6,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import Iedk.Edk;
 import Iedk.EdkErrorCode;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.DoubleByReference;
+import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.beans.value.ChangeListener;
@@ -78,7 +80,11 @@ public class MainScreen extends Main {
 	public NumberAxis xAxisLine = new NumberAxis();
 	public NumberAxis yAxisLine = new NumberAxis();
 
-	public double threshold, barChartValue, baseline = 0, divider = 1, timePlaying = 0;
+	public double threshold, baselineValue, divider = 1, timePlaying = 0;
+    public double[] baseline = {0, 0, 0, 0, 0};
+	boolean resetBase = true;
+
+    public static String choiceEmotivData;
 
 
 	@FXML
@@ -158,7 +164,10 @@ public class MainScreen extends Main {
 
 		initializeBarChartConcentrationData();
 
-		startEmotivInfo();
+        //startEmotivData();
+
+        startEmotivInfo();
+		initializeHeadsetInfo();
 
 		buttonOpenUserWindow.setOnAction(e -> {
 			//UserScreen.display(this);
@@ -171,7 +180,7 @@ public class MainScreen extends Main {
 		});
 
 		buttonMainStart.setOnAction(e -> {
-			if (baseline == 0 && !choiceBoxTraining.getValue().toString().equals("Baseline")){
+			if (baseline[0] == 0 && !choiceBoxTraining.getValue().toString().equals("Baseline")){
 				showAlertBaseline();
 				return;
 			}
@@ -185,35 +194,11 @@ public class MainScreen extends Main {
 			startStimulation();
 			startTimer();
 
-			startButton = true;
-			killEpocThread = false;
-			//https://www.youtube.com/watch?v=wOtGPJBUAVs
-			backgorundThread = new Service<Void>() {
+            startButton = true;
+            killEpocThread = false;
 
+            choiceEmotivData = choiceBoxDataChannel.getValue().toString();
 
-				@Override
-				protected Task<Void> createTask() {
-					return new Task<Void>() {
-						@Override
-						protected Void call() throws Exception {
-
-							emotivData.epocData(choiceBoxDataChannel.getValue().toString());  //Starts a stream of data
-							return null;
-						}
-					};
-				}
-			};
-
-			backgorundThread.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
-				@Override
-				public void handle(WorkerStateEvent event) {
-
-				}
-			});
-
-			//barChartMain10.barGapProperty().bind(backgorundThread.);
-
-			backgorundThread.restart();
 		});
 
 		buttonMainFinish.setOnAction(e -> {
@@ -227,26 +212,37 @@ public class MainScreen extends Main {
 			enableItems();
 
 			if (choiceBoxTraining.getValue().toString().equals("Baseline")){
-				baseline = baseline / divider;
-				labelBaseline.setText(String.valueOf(round(baseline, 2)));
+				baseline[0] = baseline[0] / divider;
+                baseline[1] = baseline[1] / divider;
+                baseline[2] = baseline[2] / divider;
+                baseline[3] = baseline[3] / divider;
+                baseline[4] = baseline[4] / divider;
+
+				baselineValue = (baseline[0] + baseline[1] + baseline[2] + baseline[3] + baseline[4]) / 5;
+
+				System.out.println("Base " +  baseline[0] + " " +  baseline[1] + " " +  baseline[2] + " " +  baseline[3] + " " +  baseline[4] + " "  +  divider + " " + baselineValue);
+
+				labelBaseline.setText(String.valueOf(round(baselineValue , 2)));
 			}
 
-			killEpocThread = true;
+            killEpocThread = true;
 			startButton = false;
 
 		});
 
 		choiceBoxTraining.setOnAction(e -> {
-			if (baseline != 0){
+			if (baselineValue != 0){
 				setThreshold();
 			}
 		});
 
 		choiceBoxDifficulty.setOnAction(e -> {
-			if (baseline != 0){
+			if (baselineValue != 0){
 				setThreshold();
 			}
 		});
+
+
 
 	}
 
@@ -271,22 +267,24 @@ public class MainScreen extends Main {
 		{
 			case "Alpha/Theta":
 				if (choiceBoxDifficulty.getValue().toString().equals("Easy"))
-					threshold = baseline * 1.1;
+					threshold = (baseline[2]/baseline[0]) * 1.1;
 				else if (choiceBoxDifficulty.getValue().toString().equals("Medium"))
-					threshold = baseline * 1.2;
+					threshold = (baseline[2]/baseline[0]) * 1.2;
 				else
-					threshold = baseline * 1.3;
+					threshold = (baseline[2]/baseline[0]) * 1.3;
+				labelBaseline.setText(String.valueOf(round(baseline[2]/baseline[0] , 2)));
 				break;
 			case "Theta/LowBeta":
 				if (choiceBoxDifficulty.getValue().toString().equals("Easy"))
-					threshold = baseline * 0.9;
+					threshold = (baseline[0]/baseline[1]) * 0.9;
 				else if (choiceBoxDifficulty.getValue().toString().equals("Medium"))
-					threshold = baseline * 0.8;
+					threshold = (baseline[0]/baseline[1]) * 0.8;
 				else
-					threshold = baseline * 0.7;
+					threshold = (baseline[0]/baseline[1]) * 0.7;
+				labelBaseline.setText(String.valueOf(round(baseline[0]/baseline[1] , 2)));
 				break;
 			default:
-
+				labelBaseline.setText(String.valueOf(round(baselineValue , 2)));
 				break;
 		}
 
@@ -431,59 +429,107 @@ public class MainScreen extends Main {
 		}
 	}
 
-	public void startEmotivInfo(){
 
-		backgorundThread2 = new Service<Void>() {
+	/*public void startEmotivData(){
+        backgorundThread = new Service<Void>() {
 
-			@Override
-			protected Task<Void> createTask() {
-				return new Task<Void>() {
-					@Override
-					protected Void call() throws Exception {
 
-						emotivData.epocHeadsetInfo();  //Starts a stream of data
-						return null;
-					}
-				};
-			}
-		};
+            @Override
+            protected Task<Void> createTask() {
+                return new Task<Void>() {
+                    @Override
+                    protected Void call() throws Exception {
 
-		backgorundThread2.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
-			@Override
-			public void handle(WorkerStateEvent event) {
-			}
-		});
+                        emotivData.epocData();  //Starts a stream of data
+                        return null;
+                    }
+                };
+            }
+        };
 
-		//barChartMain10.barGapProperty().bind(backgorundThread.);
+        backgorundThread.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
+            @Override
+            public void handle(WorkerStateEvent event) {
 
-		backgorundThread2.restart();
+            }
+        });
 
-		initializeHeadsetInfo();
+        //barChartMain10.barGapProperty().bind(backgorundThread.);
 
-	}
+        backgorundThread.restart();
+    }*/
+
+
+    public void startEmotivInfo(){
+
+        backgorundThread2 = new Service<Void>() {
+            @Override
+            protected Task<Void> createTask() {
+                return new Task<Void>(){
+                    @Override
+                    protected Void call() throws Exception {
+
+                        emotivData.epocHeadsetInfo();  //Starts a stream of data
+                        return null;
+                    }
+                };
+            }
+        };
+
+        backgorundThread2.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
+            @Override
+            public void handle(WorkerStateEvent event) {
+            }
+        });
+
+        //barChartMain10.barGapProperty().bind(backgorundThread.);
+
+        backgorundThread2.restart();
+
+        //initializeHeadsetInfo();
+    }
+
 
 	public  void initializeHeadsetInfo(){
 
-		if (emotivData.batteryStrength == 3) {
-			String path = System.getProperty("user.dir") + File.separator + "IndicatorPhotos" + File.separator + "battery1.png";
-			File img = new File(path);
-			imageBattery.setImage(new Image(img.toURI().toString()));
-		}
-		else if (emotivData.batteryStrength == 2){
-			String path = System.getProperty("user.dir") + File.separator + "IndicatorPhotos" + File.separator + "battery2.png";
-			File img = new File(path);
-			imageBattery.setImage(new Image(img.toURI().toString()));
-		}
-		else if (emotivData.batteryStrength == 1){
-			String path = System.getProperty("user.dir") + File.separator + "IndicatorPhotos" + File.separator + "battery3.png";
-			File img = new File(path);
-			imageBattery.setImage(new Image(img.toURI().toString()));
-		}
-		else {
-			String path = System.getProperty("user.dir")  + File.separator + "IndicatorPhotos" + File.separator + "battery4.png";
-			File img = new File(path);
-			imageBattery.setImage(new Image(img.toURI().toString()));
-		}
+
+		Timeline timeline = new Timeline();
+		timeline.getKeyFrames().add(
+				new KeyFrame(Duration.millis(1000), (ActionEvent actionEvent) -> {
+
+		if (emotivData.wirelessStrength != 0) {
+            if (emotivData.batteryStrength == 5) {
+                String path = System.getProperty("user.dir") + File.separator + "IndicatorPhotos" + File.separator + "battery1.png";
+                File img = new File(path);
+                imageBattery.setImage(new Image(img.toURI().toString()));
+            } else if (emotivData.batteryStrength == 4) {
+                String path = System.getProperty("user.dir") + File.separator + "IndicatorPhotos" + File.separator + "battery2.png";
+                File img = new File(path);
+                imageBattery.setImage(new Image(img.toURI().toString()));
+            } else if (emotivData.batteryStrength == 3) {
+                String path = System.getProperty("user.dir") + File.separator + "IndicatorPhotos" + File.separator + "battery3.png";
+                File img = new File(path);
+                imageBattery.setImage(new Image(img.toURI().toString()));
+            } else if (emotivData.batteryStrength == 2) {
+                String path = System.getProperty("user.dir") + File.separator + "IndicatorPhotos" + File.separator + "battery4.png";
+                File img = new File(path);
+                imageBattery.setImage(new Image(img.toURI().toString()));
+            } else if (emotivData.batteryStrength == 1) {
+                String path = System.getProperty("user.dir") + File.separator + "IndicatorPhotos" + File.separator + "battery5.png";
+                File img = new File(path);
+                imageBattery.setImage(new Image(img.toURI().toString()));
+            } else {
+                String path = System.getProperty("user.dir") + File.separator + "IndicatorPhotos" + File.separator + "battery6.png";
+                File img = new File(path);
+                imageBattery.setImage(new Image(img.toURI().toString()));
+            }
+        }
+        else{
+            String path = System.getProperty("user.dir") + File.separator + "IndicatorPhotos" + File.separator + "battery6.png";
+            File img = new File(path);
+            imageBattery.setImage(new Image(img.toURI().toString()));
+        }
+
 
 		if (emotivData.wirelessStrength == 2) {
 			String path = System.getProperty("user.dir") + File.separator + "IndicatorPhotos" + File.separator + "wireless3.png";
@@ -501,22 +547,48 @@ public class MainScreen extends Main {
 			imageWireless.setImage(new Image(img.toURI().toString()));
 		}
 
-		circleIndicatorAF3.setFill(color(emotivData.signalAF3));
-		circleIndicatorAF4.setFill(color(emotivData.signalAF4));
-		circleIndicatorF7.setFill(color(emotivData.signalF7));
-		circleIndicatorF3.setFill(color(emotivData.signalF3));
-		circleIndicatorF4.setFill(color(emotivData.signalF4));
-		circleIndicatorF8.setFill(color(emotivData.signalF8));
-		circleIndicatorFC5.setFill(color(emotivData.signalFC5));
-		circleIndicatorFC6.setFill(color(emotivData.signalFC6));
-		circleIndicatorT7.setFill(color(emotivData.signalT7));
-		circleIndicatorT8.setFill(color(emotivData.signalT8));
-		circleIndicatorCMS.setFill(color(emotivData.signalCMS));
-		circleIndicatorDRL.setFill(color(emotivData.signalDRL));
-		circleIndicatorP7.setFill(color(emotivData.signalP7));
-		circleIndicatorP8.setFill(color(emotivData.signalP8));
-		circleIndicatorO1.setFill(color(emotivData.signalO1));
-		circleIndicatorO2.setFill(color(emotivData.signalO2));
+
+                    if (emotivData.wirelessStrength != 0) {
+                        circleIndicatorAF3.setFill(color(emotivData.signalAF3));
+                        circleIndicatorAF4.setFill(color(emotivData.signalAF4));
+                        circleIndicatorF7.setFill(color(emotivData.signalF7));
+                        circleIndicatorF3.setFill(color(emotivData.signalF3));
+                        circleIndicatorF4.setFill(color(emotivData.signalF4));
+                        circleIndicatorF8.setFill(color(emotivData.signalF8));
+                        circleIndicatorFC5.setFill(color(emotivData.signalFC5));
+                        circleIndicatorFC6.setFill(color(emotivData.signalFC6));
+                        circleIndicatorT7.setFill(color(emotivData.signalT7));
+                        circleIndicatorT8.setFill(color(emotivData.signalT8));
+                        circleIndicatorCMS.setFill(color(emotivData.signalCMS));
+                        circleIndicatorDRL.setFill(color(emotivData.signalDRL));
+                        circleIndicatorP7.setFill(color(emotivData.signalP7));
+                        circleIndicatorP8.setFill(color(emotivData.signalP8));
+                        circleIndicatorO1.setFill(color(emotivData.signalO1));
+                        circleIndicatorO2.setFill(color(emotivData.signalO2));
+                    }
+                    else{
+                        circleIndicatorAF3.setFill(color(0));
+                        circleIndicatorAF4.setFill(color(0));
+                        circleIndicatorF7.setFill(color(0));
+                        circleIndicatorF3.setFill(color(0));
+                        circleIndicatorF4.setFill(color(0));
+                        circleIndicatorF8.setFill(color(0));
+                        circleIndicatorFC5.setFill(color(0));
+                        circleIndicatorFC6.setFill(color(0));
+                        circleIndicatorT7.setFill(color(0));
+                        circleIndicatorT8.setFill(color(0));
+                        circleIndicatorCMS.setFill(color(0));
+                        circleIndicatorDRL.setFill(color(0));
+                        circleIndicatorP7.setFill(color(0));
+                        circleIndicatorP8.setFill(color(0));
+                        circleIndicatorO1.setFill(color(0));
+                        circleIndicatorO2.setFill(color(0));
+                    }
+				}));
+
+		timeline.setCycleCount(Animation.INDEFINITE);
+		timeline.setAutoReverse(true);
+		timeline.play();
 
 
 	}
@@ -546,7 +618,7 @@ public class MainScreen extends Main {
 
 	public void initalizeChoiceTraining(){
 		choiceBoxTraining.setItems(FXCollections.observableArrayList(
-						"Baseline", "Alpha/Theta", "Theta/LowBeta", "Frontal Asymmetry")
+						"Baseline", "Alpha/Theta", "Theta/LowBeta")
 		);
 		choiceBoxTraining.getSelectionModel().selectFirst();
 	}
@@ -568,8 +640,11 @@ public class MainScreen extends Main {
 			@Override
 			public void changed(ObservableValue observable, Object oldValue, Object newValue) {
 				dataChannelChoice = newValue.toString();
+                choiceEmotivData = choiceBoxDataChannel.getValue().toString();
 			}
 		});
+
+        choiceEmotivData = choiceBoxDataChannel.getValue().toString();
 	}
 
 	public void initalizeChoiceBoxUser(){
@@ -628,10 +703,19 @@ public class MainScreen extends Main {
 		lineChartProgress.getData().remove(series.getData());
 		lineChartProgress.getData().add(series);
 
-
 		Timeline timeline = new Timeline();
 		timeline.getKeyFrames().add(
 				new KeyFrame(Duration.millis(500), (ActionEvent actionEvent) -> {
+
+
+					if (startButton && resetBase) {
+						baseline[0] = baseline[1] = baseline[2] = baseline[3] = baseline[4] = 0;
+						System.out.println("Uslo je jej");
+						resetBase = false;
+					} else if (buttonMainFinish.isDisable() && !resetBase){
+						resetBase = true;
+					}
+
 					double value = getMeasuringBarValue();
 
 					data.setYValue(value);
@@ -645,7 +729,7 @@ public class MainScreen extends Main {
 						childUserScreen.data.setYValue(value);
 					}
 
-					if (choiceBoxStimulation.getValue().toString().equals("Music") && baseline != 0 && !choiceBoxTraining.getValue().toString().equals("Baseline") && threshold != 0 && buttonOpenUserWindow.isDisabled() && buttonMainStart.isDisabled()){
+					if (choiceBoxStimulation.getValue().toString().equals("Music") && baseline[0] != 0 && !choiceBoxTraining.getValue().toString().equals("Baseline") && threshold != 0 && buttonOpenUserWindow.isDisabled() && buttonMainStart.isDisabled()){
 						if (choiceBoxTraining.getValue().toString().equals("Alpha/Theta") && value < threshold){
 							childUserScreen.mediaPlayer.pause();
 						} else if (choiceBoxTraining.getValue().toString().equals("Alpha/Theta") && value >= threshold) {
@@ -661,7 +745,7 @@ public class MainScreen extends Main {
 						}
 					}
 
-					if (choiceBoxStimulation.getValue().toString().equals("Photos") && baseline != 0 && !choiceBoxTraining.getValue().toString().equals("Baseline") && threshold != 0 && buttonOpenUserWindow.isDisabled() && buttonMainStart.isDisabled()){
+					if (choiceBoxStimulation.getValue().toString().equals("Photos") && baseline[0] != 0 && !choiceBoxTraining.getValue().toString().equals("Baseline") && threshold != 0 && buttonOpenUserWindow.isDisabled() && buttonMainStart.isDisabled()){
 						if (choiceBoxTraining.getValue().toString().equals("Alpha/Theta") && value < threshold){
 							childUserScreen.timeline.pause();
 						} else if (choiceBoxTraining.getValue().toString().equals("Alpha/Theta") && value >= threshold) {
@@ -679,7 +763,7 @@ public class MainScreen extends Main {
 
 				}));
 
-		timeline.setCycleCount(1000);
+		timeline.setCycleCount(Animation.INDEFINITE);
 		timeline.setAutoReverse(true);
 		timeline.play();
 	}
@@ -695,45 +779,67 @@ public class MainScreen extends Main {
 	public double getMeasuringBarValue(){
 		double theta, lowBeta, value;
 
-		if (buttonChooseSong.isDisabled())
 			switch(choiceBoxTraining.getValue().toString())
 			{
 				case "Baseline":
-					baseline += getMeasuringValue();
+					if (baseline[0] == 0) divider = 0;
+				    value = getMeasuringValue("Base");
 					divider++;
 					break;
 				case "Alpha/Theta":
-					getMeasuringValue();
+					value = getMeasuringValue("AT");
 					break;
 				case "Theta/LowBeta":
-					getMeasuringValue();
+					value = getMeasuringValue("TB");
 					break;
 				default:
 					//Here is different formula
-					getMeasuringValue();
+					value = getMeasuringValue("Base");
 					break;
 			}
-
-
-		value = getMeasuringValue();
 		return value;
 	}
 
-	public double getMeasuringValue(){
-		double theta, lowBeta;
+	public double getMeasuringValue(String choice){
+		double theta=0, lowBeta=0, alpha = 0, gamma = 0, highBeta = 0, value;
 
 
-		if (choiceBoxDataChannel.getValue().toString().equals("Total")){
-			theta = emotivData.totalTheta;
-			lowBeta = emotivData.totalLowBeta;
-		}
-		else
-		{
-			theta = emotivData.randomTheta;
-			lowBeta = emotivData.randomLowBeta;
-		}
+        if (choice.equals("Base") && startButton) {
+            if (choiceBoxDataChannel.getValue().toString().equals("Total")) {
+                value = (emotivData.totalTheta + emotivData.totalLowBeta + emotivData.totalAlpha + emotivData.totalHighBeta + emotivData.totalGamma) / 5;
+                baseline[0] += emotivData.totalTheta;
+                baseline[1] += emotivData.totalLowBeta;
+                baseline[2] += emotivData.totalAlpha;
+                baseline[3] += emotivData.totalHighBeta;
+                baseline[4] += emotivData.totalGamma;
 
-		return theta/lowBeta;
+            } else {
+                value = (emotivData.singleTheta + emotivData.singleLowBeta + emotivData.singleAlpha + emotivData.singleHighBeta + emotivData.singleGamma) / 5;
+                baseline[0] += emotivData.singleTheta;
+                baseline[1] += emotivData.singleLowBeta;
+                baseline[2] += emotivData.singleAlpha;
+                baseline[3] += emotivData.singleHighBeta;
+                baseline[4] += emotivData.singleGamma;
+            }
+            System.out.println("POstavljanje: " + baseline[0] + " " + emotivData.singleTheta + " 1 "  + baseline[1] + " " + emotivData.singleLowBeta + " 2 "  + baseline[2]
+					+ " " + emotivData.singleAlpha + " 3 "  + baseline[3] + " " + emotivData.singleHighBeta + " 4 "  + baseline[4] + " " + emotivData.singleGamma + " D " + divider);
+        }
+        else if (choice.equals("AT")){
+            if (choiceBoxDataChannel.getValue().toString().equals("Total")) {
+                value = emotivData.totalAlpha / emotivData.totalTheta;
+            } else {
+                value = emotivData.singleAlpha / emotivData.singleTheta;
+            }
+        }
+        else{
+            if (choiceBoxDataChannel.getValue().toString().equals("Total")) {
+                value = emotivData.totalTheta / emotivData.totalLowBeta;
+            } else {
+                value = emotivData.singleTheta / emotivData.singleLowBeta;
+            }
+        }
+
+		return value;
 	}
 
 
@@ -768,18 +874,18 @@ public class MainScreen extends Main {
 						series1.getData().set(3, new XYChart.Data("high_beta", high_beta.getValue()));
 						series1.getData().set(4, new XYChart.Data("gamma", gamma.getValue()));*/
 
-						series1.getData().set(0, new XYChart.Data("theta", emotivData.randomTheta));
-						series1.getData().set(1, new XYChart.Data("alpha", emotivData.randomAlpha));
-						series1.getData().set(2, new XYChart.Data("low_beta", emotivData.randomLowBeta));
-						series1.getData().set(3, new XYChart.Data("high_beta", emotivData.randomHighBeta));
-						series1.getData().set(4, new XYChart.Data("gamma", emotivData.randomGamma));
+						series1.getData().set(0, new XYChart.Data("theta", emotivData.singleTheta));
+						series1.getData().set(1, new XYChart.Data("alpha", emotivData.singleAlpha));
+						series1.getData().set(2, new XYChart.Data("low_beta", emotivData.singleLowBeta));
+						series1.getData().set(3, new XYChart.Data("high_beta", emotivData.singleHighBeta));
+						series1.getData().set(4, new XYChart.Data("gamma", emotivData.singleGamma));
 					}
 
 
 
 				}));
 
-		timeline.setCycleCount(1000);
+		timeline.setCycleCount(Animation.INDEFINITE);
 		timeline.setAutoReverse(true);  //!?
 		timeline.play();
 	}
